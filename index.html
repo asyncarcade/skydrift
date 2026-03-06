@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SkyDrift — Async Arcade</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+<div id="game-wrapper">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD (always on top during gameplay) -->
+  <div id="hud">
+    <div id="score-block">
+      <div id="score-label">ALTITUDE</div>
+      <div id="score-value">0m</div>
+    </div>
+    <div id="best-block">
+      <div id="best-label">BEST</div>
+      <div id="best-value">0m</div>
+    </div>
+  </div>
+
+  <button id="pause-btn">⏸</button>
+
+  <div id="powerup-bar">
+    <div class="pu-slot shield"    id="pu-shield">🛡️</div>
+    <div class="pu-slot rocket"    id="pu-rocket">🚀</div>
+    <div class="pu-slot destroyer" id="pu-destroyer">💥</div>
+    <div class="pu-slot dash"      id="pu-dash">⚡</div>
+  </div>
+
+  <div id="parachute-indicator">
+    <span id="para-icon">🪂</span>
+    <span id="para-label">OPEN</span>
+  </div>
+
+  <div id="energy-flash"></div>
+  <div id="game-msg"></div>
+  <div id="touch-hint">TAP = parachute · SWIPE = drift</div>
+
+  <!-- ── START SCREEN ── -->
+  <div class="screen" id="start-screen">
+    <div class="logo-block">
+      <svg class="kite-logo" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="30,4 54,30 30,56 6,30" fill="rgba(30,80,160,0.5)" stroke="rgba(100,180,255,0.9)" stroke-width="2.5"/>
+        <line x1="30" y1="4"  x2="30" y2="56" stroke="rgba(100,180,255,0.45)" stroke-width="1"/>
+        <line x1="6"  y1="30" x2="54" y2="30" stroke="rgba(100,180,255,0.45)" stroke-width="1"/>
+        <circle cx="30" cy="30" r="3" fill="rgba(150,220,255,0.9)"/>
+        <path d="M30 56 Q33 63 30 70 Q27 63 30 56" stroke="rgba(100,180,255,0.6)" stroke-width="1.5" fill="none"/>
+      </svg>
+      <div class="brand-name">Async Arcade</div>
+    </div>
+
+    <div class="game-title">SKYDRIFT</div>
+    <div class="game-subtitle">Parachute · Survive · Fall</div>
+
+    <canvas id="preview-canvas" width="110" height="140"></canvas>
+
+    <button class="btn-primary"   id="start-btn">DIVE IN</button>
+    <button class="btn-secondary" id="how-btn">HOW TO PLAY</button>
+
+    <div class="instructions-mini">
+      <div class="inst-item"><span class="inst-icon">👆</span><span>TAP</span></div>
+      <div class="inst-item"><span class="inst-icon">↔️</span><span>SWIPE</span></div>
+      <div class="inst-item"><span class="inst-icon">🛡️</span><span>SHIELD</span></div>
+      <div class="inst-item"><span class="inst-icon">🚀</span><span>ROCKET</span></div>
+    </div>
+  </div>
+
+  <!-- ── GAME OVER SCREEN ── -->
+  <div class="screen hidden" id="gameover-screen">
+    <div class="go-title">CRASH!</div>
+    <div class="go-score-block">
+      <div class="go-score-label">DISTANCE</div>
+      <div class="go-score-value" id="go-score">0</div>
+      <div class="go-best" id="go-best"></div>
+    </div>
+    <button class="btn-primary"   id="retry-btn">TRY AGAIN</button>
+    <button class="btn-secondary" id="menu-btn" style="margin-top:10px">MAIN MENU</button>
+  </div>
+
+  <!-- ── PAUSE OVERLAY ── -->
+  <div id="pause-overlay" class="hidden">
+    <div class="pause-title">PAUSED</div>
+    <button class="btn-primary"   id="resume-btn">RESUME</button>
+    <button class="btn-secondary" id="quit-btn" style="margin-top:12px">QUIT</button>
+  </div>
+
+  <!-- ── HOW TO PLAY ── -->
+  <div id="howto-overlay" class="hidden">
+    <div class="howto-title">HOW TO PLAY</div>
+    <div class="howto-grid">
+      <div class="howto-card"><div class="howto-card-icon">👆</div><div class="howto-card-title">TAP / SPACE</div><div class="howto-card-desc">Toggle parachute — slow fall when open, fast when closed</div></div>
+      <div class="howto-card"><div class="howto-card-icon">↔️</div><div class="howto-card-title">SWIPE</div><div class="howto-card-desc">Swipe any direction to drift your character sideways</div></div>
+      <div class="howto-card"><div class="howto-card-icon">🛡️</div><div class="howto-card-title">SHIELD</div><div class="howto-card-desc">Absorbs one hit from any obstacle</div></div>
+      <div class="howto-card"><div class="howto-card-icon">🚀</div><div class="howto-card-title">ROCKET</div><div class="howto-card-desc">Turbo fall & destroy on contact for 3.5s</div></div>
+      <div class="howto-card"><div class="howto-card-icon">💥</div><div class="howto-card-title">DESTROYER</div><div class="howto-card-desc">Aura destroys nearby obstacles for 5s</div></div>
+      <div class="howto-card"><div class="howto-card-icon">⚡</div><div class="howto-card-title">DASH SHIELD</div><div class="howto-card-desc">Auto-dashes & smashes nearby threats for 6s</div></div>
+      <div class="howto-card"><div class="howto-card-icon">🚧</div><div class="howto-card-title">OBSTACLES</div><div class="howto-card-desc">Rocks, crates, birds, doors, cannons &amp; lasers</div></div>
+      <div class="howto-card"><div class="howto-card-icon">📏</div><div class="howto-card-title">SCORE</div><div class="howto-card-desc">Metres fallen — fall as far as possible!</div></div>
+    </div>
+    <button class="btn-primary" id="howto-close">GOT IT!</button>
+  </div>
+</div>
+
+<!-- JS modules loaded in dependency order -->
+<script src="js/audio.js"></script>
+<script src="js/state.js"></script>
+<script src="js/camera.js"></script>
+<script src="js/input.js"></script>
+<script src="js/player.js"></script>
+<script src="js/obstacles.js"></script>
+<script src="js/powerups.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
